@@ -1,0 +1,43 @@
+--1.En Pahalı Ürünü Getirin 
+SELECT p.ProductName, MAX(p.UnitPrice) 'MaxPrice' from Products p
+
+--2. En Son Verilen Siparişi Bulun 
+SELECT p.ProductName, MAX(o.OrderDate) 'LastOrder' from 'Order Details' od
+JOIN Orders o 
+ON od.OrderID = o.OrderID
+JOIN Products p 
+on od.ProductID = p.ProductID
+
+--3.Fiyatı Ortalama Fiyattan Yüksek Olan Ürünleri Getirin
+SELECT p.ProductName, p.UnitPrice from Products p 
+WHERE p.UnitPrice > (SELECT AVG(p2.UnitPrice) FROM Products p2)
+
+--4. Belirli Kategorilerdeki Ürünleri Listeleyin
+SELECT c.CategoryName, p.ProductName from Categories c
+join Products p 
+on p.CategoryID = c.CategoryID
+WHERE c.CategoryName In ('Beverages', 'Seafood')
+
+--5. En Yüksek Fiyatlı Ürünlere Sahip Kategorileri Listeleyin
+SELECT c.CategoryName, p.ProductName, p.UnitPrice from Products p 
+JOIN Categories c 
+on c.CategoryID = p.CategoryID
+WHERE p.UnitPrice = (SELECT MAX(p2.unitprice) from Products p2)
+
+--6. Bir Ülkedeki Müşterilerin Verdiği Siparişleri Listeleyin
+SELECT c.Country, c.CompanyName, o.OrderID from Customers c 
+JOIN  Orders o
+on c.CustomerID = o.CustomerID
+where c.Country = 'Germany'
+
+--7. Her Kategori İçin Ortalama Fiyatın Üzerinde Olan Ürünleri Listeleyin
+SELECT c.CategoryName, p.ProductName, p.UnitPrice from Categories c 
+join Products p 
+on p.CategoryID = c.CategoryID
+where p.UnitPrice > (SELECT AVG(p2.UnitPrice) FROM Products p2)
+
+--8. Her Müşterinin En Son Verdiği Siparişi Listeleyin
+SELECT c.CompanyName, o.OrderID, MAX(o.OrderDate) AS 'LastOrderDate' from Customers c 
+join Orders o 
+on o.CustomerID = c.CustomerID
+Group by c.CompanyName
