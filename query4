@@ -41,3 +41,74 @@ SELECT c.CompanyName, o.OrderID, MAX(o.OrderDate) AS 'LastOrderDate' from Custom
 join Orders o 
 on o.CustomerID = c.CustomerID
 Group by c.CompanyName
+
+--10. En Az 10 Ürün Satın Alınan Siparişleri Listeleyin
+SELECT p.ProductName, od.OrderID, od.Quantity FROM 'Order Details' od 
+JOIN Products p 
+on p.ProductID = od.ProductID
+WHERE od.Quantity >= 10
+
+--11. Her Kategoride En Pahalı Olan Ürünlerin Ortalama Fiyatını Bulun
+SELECT AVG(p.UnitPrice) FROM Categories c 
+join Products p 
+on p.CategoryID = c.CategoryID
+where p.UnitPrice IN (SELECT MAX(p2.UnitPrice) from Products p2 
+                     JOIN Categories c2
+                     on c2.CategoryID = p2.CategoryID
+                     Group by c2.CategoryID)
+
+--12. Müşterilerin Verdiği Toplam Sipariş Sayısına Göre Sıralama Yapın
+SELECT c.CustomerID, c.CompanyName, COUNT(o.OrderID) 'OrderCount' from Customers c 
+JOIN Orders o 
+on o.CustomerID = c.CustomerID
+Group by c.CustomerID
+order by COUNT(o.OrderID) DESC
+
+--13. En Fazla Sipariş Vermiş 5 Müşteriyi ve Son Sipariş Tarihlerini Listeleyin
+SELECT c.CustomerID, c.CompanyName, COUNT(o.OrderID) 'OrderCount', o.OrderDate from Customers c 
+join Orders o
+on o.CustomerID = c.CustomerID
+Group by c.CustomerID
+order by COUNT(o.OrderID) Desc 
+LIMIT 5
+
+--14. Toplam Ürün Sayısı 11'den Fazla Olan Kategorileri Listeleyin
+SELECT c.CategoryID, c.CategoryName, COUNT(p.CategoryID) 'ProductsCount' from Categories c 
+join Products p 
+on p.CategoryID = c.CategoryID
+group by c.CategoryID
+HAVING COUNT(p.CategoryID) > 11
+
+--15. En Fazla 5 Farklı Ürün Sipariş Eden Müşterileri Listeleyin
+SELECT o.CustomerID, c.CompanyName, COUNT(od.OrderID) 'ProductCount' from Orders o 
+JOIN Customers c
+on c.CustomerID = o.CustomerID
+JOIN 'Order Details' od
+on o.OrderID = od.OrderID
+GROUP by o.OrderID
+HAVING COUNT(od.OrderID) <= 5
+
+--16. 2'den Fazla Ürün Sağlayan Tedarikçileri Listeleyin
+SELECT s.SupplierID, s.CompanyName, COUNT(p.SupplierID) from Suppliers s 
+JOIN Products p 
+on p.SupplierID = s.SupplierID
+GROUP by s.SupplierID
+HAVING COUNT(p.SupplierID) > 2
+
+--17. Her Müşteri İçin En Pahalı Ürünü Bulun
+SELECT o.CustomerID, p.ProductName,MAX(od.UnitPrice) 'MostExpProd' from 'Order Details' od 
+join Products p
+on p.ProductID = od.ProductID
+JOIN  Orders o
+on o.OrderID = od.OrderID
+GROUP by o.OrderID
+
+--18. 10.000'den Fazla Sipariş Değeri Olan Çalışanları Listeleyin
+SELECT o.EmployeeID, CONCAT(e.FirstName, ' ', e.LastName) AS 'FullName', SUM(od.UnitPrice * od.Quantity) AS 'TotalValue' from Orders o
+join 'Order Details' od
+on od.OrderID = o.OrderID
+join Employees e 
+on e.EmployeeID = o.EmployeeID
+Group by e.EmployeeID, e.FirstName, e.LastName
+HAVING  SUM(od.UnitPrice * od.Quantity) > 10000
+
