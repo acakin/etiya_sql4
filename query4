@@ -112,3 +112,55 @@ on e.EmployeeID = o.EmployeeID
 Group by e.EmployeeID, e.FirstName, e.LastName
 HAVING  SUM(od.UnitPrice * od.Quantity) > 10000
 
+--19. Kategorisine Göre En Çok Sipariş Edilen Ürünü Bulun
+WITH ProductOrderCounts AS (
+    SELECT p.ProductID, p.ProductName, p.CategoryID, SUM(od.Quantity) AS TotalOrdered
+    FROM Products p
+    JOIN "Order Details" od ON p.ProductID = od.ProductID
+    JOIN Orders o ON od.OrderID = o.OrderID
+    GROUP BY p.ProductID, p.ProductName, p.CategoryID
+)
+SELECT poc.CategoryID, p.ProductName, poc.TotalOrdered
+FROM ProductOrderCounts poc
+JOIN Products p ON poc.ProductID = p.ProductID
+WHERE (poc.CategoryID, poc.TotalOrdered) IN (
+    SELECT CategoryID, MAX(TotalOrdered)
+    FROM ProductOrderCounts
+    GROUP BY CategoryID
+)
+ORDER BY poc.categoryid;
+
+--20. Müşterilerin En Son Sipariş Verdiği Ürün ve Tarihlerini Listeleyin
+SELECT c.CustomerID, c.CompanyName, p.ProductName, MAX(o.OrderDate) AS 'LastOrderDate' from 'Order Details' od 
+JOIN  Customers c
+on c.CustomerID = o.CustomerID
+JOIN Products p 
+on p.ProductID = od.ProductID
+JOIN Orders o 
+on o.OrderID = od.OrderID
+GROUP by c.CustomerID
+
+--21. Her Çalışanın Teslim Ettiği En Pahalı Siparişi ve Tarihini Listeleyin
+WITH OrderValues AS (
+    SELECT o.EmployeeID, o.OrderID, SUM(od.Quantity * p.UnitPrice) AS TotalOrderValue, o.OrderDate
+    FROM Orders o
+    JOIN "Order Details" od ON o.OrderID = od.OrderID
+    JOIN Products p ON od.ProductID = p.ProductID
+    GROUP BY o.EmployeeID, o.OrderID, o.OrderDate
+)
+SELECT e.EmployeeID, e.FirstName, e.LastName, ov.OrderID, ov.TotalOrderValue, ov.OrderDate
+FROM OrderValues ov
+JOIN Employees e ON ov.EmployeeID = e.EmployeeID
+WHERE (ov.EmployeeID, ov.TotalOrderValue) IN (
+    SELECT EmployeeID, MAX(TotalOrderValue)
+    FROM OrderValues
+    GROUP BY EmployeeID
+);
+
+--22. En Fazla Sipariş Verilen Ürünü ve Bilgilerini Listeleyin
+SELECT p.*, SUM(od.Quantity) 'OrderCount' from 'Order Details' od 
+JOIN Products p 
+on p.ProductID = od.ProductID
+GROUP by p.ProductName
+order by COUNT(od.ProductID) DESC
+LIMIT 1
